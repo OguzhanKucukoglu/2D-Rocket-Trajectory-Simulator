@@ -20,6 +20,7 @@ qt_add_executable(RocketSimulator
     kalmanFilter.h
     kalmanFilter.cpp
     .gitignore
+    README.md
 )
 
 target_link_libraries(RocketSimulator
