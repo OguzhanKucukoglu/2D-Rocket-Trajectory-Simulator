@@ -1,0 +1,9 @@
+# C++ / Qt / CMake .gitignore
+build/
+.qtcreator/
+CMakeLists.txt.user
+*.autosave
+.DS_Store
+*.pyc
+bin/
+obj/
