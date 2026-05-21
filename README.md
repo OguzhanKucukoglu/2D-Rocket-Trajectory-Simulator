@@ -1,5 +1,7 @@
 # 🚀 2D Rocket Simulator
 
+This repository contains the initial 2D proof-of-concept (POC) for the rocket trajectory simulation. It served as a baseline to study basic kinematic relations and Euler integration. The project has now evolved into Phase 2: a pure C++, 3D 6-DOF engine using RK4 integration. 
+
 ![Simulation Screenshot](assets/screenshot.png)
 
 C++ ve Qt6 kullanılarak geliştirilmiş, gerçekçi fizik hesaplamalarına dayalı bir **2D Roket Yörünge Simülatörü**.

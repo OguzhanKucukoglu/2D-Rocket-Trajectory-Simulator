@@ -8,7 +8,7 @@ public:
     KalmanFilter(float initialState, float initialError, float processNoise, float measurementNoise);
 
     // Fizik modeline göre tahminde bulun (Predict)
-    void predict(float velocity, float dt);
+    void predict(float velocity, float acceleration, float dt);
 
     // Sensörden gelen gürültülü ölçümle tahmini düzelt (Update)
     void update(float measurement);

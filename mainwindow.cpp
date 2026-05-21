@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("2D Rocket Simulator");
     showMaximized();
 
-    altitudeFilter = new KalmanFilter(0.0f, 1.0f, 0.1f, 20.0f);
+    altitudeFilter = new KalmanFilter(0.0f, 1.0f, 2.0f, 400.0f);
     // Başlangıç Yüksekliği: 0
     // Başlangıç Belirsizliği: 1.0
     // Süreç (Model) Gürültüsü (Q): 0.1 (Fiziğimize çok güveniyoruz)
@@ -153,7 +153,7 @@ void MainWindow::simulationStep()
 
     // Kalman Filtresi Döngüsü:
     // a) Tahmin (Predict): şu hızla (dikey) gidiyorum, demek ki şuraya çıktım
-    altitudeFilter->predict(-rocket.velocity.y, dt);
+    altitudeFilter->predict(-rocket.velocity.y, -rocket.acceleration.y, dt);
 
     // b) Düzeltme (Update): sensör de x metredeyim diyor, dengeyi bul
     altitudeFilter->update(currentNoisyAltitude);
@@ -166,7 +166,35 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    painter.fillRect(0, 0, width(), (int)canvasHeight(), QColor(15, 15, 30));
+    // Atmosfer renk geçişi (irtifaya bağlı)
+    float altitude = -rocket.position.y;
+    if (altitude < 0) altitude = 0;
+
+    // Karışım oranı: 0 = yerde, 1 = uzayda (100km+)
+    float spaceRatio = altitude / 100000.0f; // 100 km'de tamamen uzay
+    if (spaceRatio > 1.0f) spaceRatio = 1.0f;
+
+    // Yer rengi (koyu mavi) → Uzay rengi (siyah)
+    // Çok adımlı renk geçişi
+    int r, g, b;
+    if (altitude < 10000) {          // 0-10 km: Gök mavisi
+        float t = altitude / 10000.0f;
+        r = (int)(135 - 100 * t);   // 135 → 35
+        g = (int)(206 - 146 * t);   // 206 → 60
+        b = (int)(235 - 115 * t);   // 235 → 120
+    } else if (altitude < 40000) {  // 10-40 km: Lacivert
+        float t = (altitude - 10000) / 30000.0f;
+        r = (int)(35  - 30 * t);    // 35 → 5
+        g = (int)(60  - 50 * t);    // 60 → 10
+        b = (int)(120 - 100 * t);   // 120 → 20
+    } else {                         // 40 km+: Siyaha geçiş
+        float t = (altitude - 40000) / 60000.0f;
+        if (t > 1.0f) t = 1.0f;
+        r = (int)(5  * (1.0f - t));
+        g = (int)(10 * (1.0f - t));
+        b = (int)(20 * (1.0f - t));
+    }
+    painter.fillRect(0, 0, width(), (int)canvasHeight(), QColor(r, g, b));
 
     // Yer çizgisi
     float groundScreenY = worldToScreen(Vector2D(0.0f,0.0f)).y();
@@ -248,6 +276,15 @@ void MainWindow::paintEvent(QPaintEvent *event)
     // Kalman'ın Tahmin Ettiği Yükseklik (Mavi/Camgöbeği - Akıllı Algoritma)
     painter.setPen(QColor(100, 200, 255)); // Açık Mavi
     painter.drawText(10, 180, QString("Kalman Alt: %1 m").arg(altitudeFilter->getState(), 0, 'f', 0));
+
+    // Sıcaklığa göre renk belirleyelim (Görsel şölen için)
+    QColor tempColor = Qt::white;
+    if (rocket.temperature > 1000.0f) tempColor = Qt::red;
+    else if (rocket.temperature > 500.0f) tempColor = QColor(255, 165, 0); // Turuncu
+
+    painter.setPen(tempColor);
+    painter.drawText(10, 200, QString("Sicaklik: %1 C").arg(rocket.temperature, 0, 'f', 0));
+    painter.drawText(10, 220, QString("Isi Akisi: %1").arg(rocket.heatFlux, 0, 'f', 1));
 
     // Bilgi yazısı
     painter.setPen(Qt::white);

@@ -8,10 +8,10 @@ KalmanFilter::KalmanFilter(float initialState, float initialError, float process
 {
 }
 
-void KalmanFilter::predict(float velocity, float dt)
+void KalmanFilter::predict(float velocity, float acceleration, float dt)
 {
     // Durum tahmini: Önceki konum + hız * zaman
-    state = state + velocity * dt;
+    state = state + velocity * dt + 0.5f * acceleration * dt * dt;
 
     // Belirsizlik artar (Çünkü zaman geçtikçe fizik modelinde hata birikir)
     uncertainty = uncertainty + Q;
